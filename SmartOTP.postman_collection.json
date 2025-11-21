@@ -1,0 +1,550 @@
+{
+	"info": {
+		"_postman_id": "smart-otp-collection",
+		"name": "SmartOTP API",
+		"description": "Complete API collection for SmartOTP - A secure OTP (TOTP/HOTP) management system",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "smartotp"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Register",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"access_token\", jsonData.accessToken);",
+									"    pm.environment.set(\"refresh_token\", jsonData.refreshToken);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"Password123!\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"register"
+							]
+						},
+						"description": "Register a new user account"
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"access_token\", jsonData.accessToken);",
+									"    pm.environment.set(\"refresh_token\", jsonData.refreshToken);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"Password123!\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						},
+						"description": "Login with existing credentials"
+					},
+					"response": []
+				},
+				{
+					"name": "Refresh Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"access_token\", jsonData.accessToken);",
+									"    pm.environment.set(\"refresh_token\", jsonData.refreshToken);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/refresh-token",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"refresh-token"
+							]
+						},
+						"description": "Refresh access token using refresh token"
+					},
+					"response": []
+				}
+			],
+			"description": "Authentication endpoints for user registration, login, and token management"
+		},
+		{
+			"name": "OTP Accounts",
+			"item": [
+				{
+					"name": "Get User OTP Accounts",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/otpaccounts",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"otpaccounts"
+							]
+						},
+						"description": "Get all OTP accounts for the authenticated user"
+					},
+					"response": []
+				},
+				{
+					"name": "Create TOTP Account",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"account_id\", jsonData.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"issuer\": \"Google\",\n  \"accountName\": \"john.doe@gmail.com\",\n  \"type\": 1,\n  \"algorithm\": 1,\n  \"digits\": 6,\n  \"period\": 30,\n  \"iconUrl\": \"https://www.google.com/favicon.ico\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/otpaccounts",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"otpaccounts"
+							]
+						},
+						"description": "Create a new TOTP account. Type: 1=TOTP, Algorithm: 1=SHA1, 2=SHA256, 3=SHA512"
+					},
+					"response": []
+				},
+				{
+					"name": "Create TOTP Account with Custom Secret",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"account_id\", jsonData.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"issuer\": \"GitHub\",\n  \"accountName\": \"johndoe\",\n  \"type\": 1,\n  \"secret\": \"JBSWY3DPEHPK3PXP\",\n  \"algorithm\": 1,\n  \"digits\": 6,\n  \"period\": 30,\n  \"iconUrl\": \"https://github.com/favicon.ico\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/otpaccounts",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"otpaccounts"
+							]
+						},
+						"description": "Create a new TOTP account with a custom secret key"
+					},
+					"response": []
+				},
+				{
+					"name": "Create HOTP Account",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"account_id\", jsonData.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"issuer\": \"Microsoft\",\n  \"accountName\": \"john.doe@outlook.com\",\n  \"type\": 2,\n  \"algorithm\": 1,\n  \"digits\": 6,\n  \"counter\": 0,\n  \"iconUrl\": \"https://www.microsoft.com/favicon.ico\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/otpaccounts",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"otpaccounts"
+							]
+						},
+						"description": "Create a new HOTP (counter-based) account. Type: 2=HOTP"
+					},
+					"response": []
+				},
+				{
+					"name": "Create TOTP Account (SHA256)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"account_id\", jsonData.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"issuer\": \"AWS\",\n  \"accountName\": \"john.doe@company.com\",\n  \"type\": 1,\n  \"algorithm\": 2,\n  \"digits\": 6,\n  \"period\": 30,\n  \"iconUrl\": \"https://aws.amazon.com/favicon.ico\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/otpaccounts",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"otpaccounts"
+							]
+						},
+						"description": "Create a new TOTP account with SHA256 algorithm"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete OTP Account",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/otpaccounts/{{account_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"otpaccounts",
+								"{{account_id}}"
+							]
+						},
+						"description": "Delete an OTP account by ID"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints for managing OTP accounts (TOTP and HOTP)"
+		},
+		{
+			"name": "OTP",
+			"item": [
+				{
+					"name": "Generate OTP Code",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/otp/generate/{{account_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"otp",
+								"generate",
+								"{{account_id}}"
+							]
+						},
+						"description": "Generate an OTP code for a specific account"
+					},
+					"response": []
+				},
+				{
+					"name": "Verify OTP Code",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"accountId\": \"{{account_id}}\",\n  \"code\": \"123456\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/otp/verify",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"otp",
+								"verify"
+							]
+						},
+						"description": "Verify an OTP code for a specific account"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints for generating and verifying OTP codes"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "https://localhost:7001",
+			"type": "string"
+		},
+		{
+			"key": "access_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "refresh_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "account_id",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
