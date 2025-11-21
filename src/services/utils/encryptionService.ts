@@ -1,4 +1,5 @@
 import * as Crypto from 'expo-crypto';
+import * as base64 from 'base-64';
 import { secureStorage } from './secureStorage';
 import { STORAGE_KEYS } from '@/constants';
 
@@ -34,7 +35,7 @@ class EncryptionService {
       // Simple XOR encryption for demo purposes
       // In production, use a proper encryption library like crypto-js
       const encrypted = this.xorEncrypt(data, this.encryptionKey!);
-      return Buffer.from(encrypted).toString('base64');
+      return base64.encode(encrypted);
     } catch (error) {
       console.error('Encryption error:', error);
       throw error;
@@ -47,7 +48,7 @@ class EncryptionService {
     }
 
     try {
-      const decoded = Buffer.from(encryptedData, 'base64').toString('utf-8');
+      const decoded = base64.decode(encryptedData);
       return this.xorEncrypt(decoded, this.encryptionKey!);
     } catch (error) {
       console.error('Decryption error:', error);

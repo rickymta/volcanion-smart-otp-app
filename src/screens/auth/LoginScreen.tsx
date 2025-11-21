@@ -38,7 +38,11 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
     try {
       await dispatch(login({ email, password })).unwrap();
     } catch (err: any) {
-      Alert.alert('Login Failed', err || 'An error occurred');
+      console.error('Login error:', err);
+      const errorMessage = typeof err === 'string' 
+        ? err 
+        : err?.message || 'An error occurred during login';
+      Alert.alert('Login Failed', errorMessage);
     }
   };
 

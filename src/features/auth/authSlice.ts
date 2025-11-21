@@ -19,6 +19,15 @@ export const login = createAsyncThunk(
     try {
       const response = await authService.login(credentials);
       
+      // Validate response structure
+      if (!response || !response.tokens || !response.user) {
+        return rejectWithValue('Invalid response from server');
+      }
+
+      if (!response.tokens.accessToken || !response.tokens.refreshToken) {
+        return rejectWithValue('Missing authentication tokens');
+      }
+      
       // Store tokens securely
       await secureStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, response.tokens.accessToken);
       await secureStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, response.tokens.refreshToken);
@@ -26,7 +35,7 @@ export const login = createAsyncThunk(
       
       return response;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || error.message);
+      return rejectWithValue(error.response?.data?.message || error.message || 'Login failed');
     }
   }
 );
@@ -37,6 +46,15 @@ export const register = createAsyncThunk(
     try {
       const response = await authService.register(data);
       
+      // Validate response structure
+      if (!response || !response.tokens || !response.user) {
+        return rejectWithValue('Invalid response from server');
+      }
+
+      if (!response.tokens.accessToken || !response.tokens.refreshToken) {
+        return rejectWithValue('Missing authentication tokens');
+      }
+      
       // Store tokens securely
       await secureStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, response.tokens.accessToken);
       await secureStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, response.tokens.refreshToken);
@@ -44,7 +62,7 @@ export const register = createAsyncThunk(
       
       return response;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || error.message);
+      return rejectWithValue(error.response?.data?.message || error.message || 'Registration failed');
     }
   }
 );

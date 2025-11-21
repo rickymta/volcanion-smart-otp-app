@@ -18,13 +18,72 @@ interface RefreshTokenResponse {
 
 export const authService = {
   async login(credentials: LoginRequest): Promise<LoginResponse> {
-    const response = await apiClient.post('/auth/login', credentials);
-    return response.data;
+    try {
+      const response = await apiClient.post('/auth/login', credentials);
+      
+      // Validate response data
+      if (!response.data) {
+        throw new Error('No data received from server');
+      }
+      
+      // Handle different possible response structures
+      const data = response.data;
+      
+      // Check if data is already in the correct format
+      if (data.user && data.tokens) {
+        return data;
+      }
+      
+      // Check if tokens are at root level
+      if (data.accessToken && data.refreshToken) {
+        return {
+          user: data.user,
+          tokens: {
+            accessToken: data.accessToken,
+            refreshToken: data.refreshToken,
+          },
+        };
+      }
+      
+      throw new Error('Invalid response format from server');
+    } catch (error: any) {
+      console.error('Login error:', error);
+      throw error;
+    }
   },
 
   async register(data: RegisterRequest): Promise<RegisterResponse> {
-    const response = await apiClient.post('/auth/register', data);
-    return response.data;
+    try {
+      const response = await apiClient.post('/auth/register', data);
+      
+      // Validate response data
+      if (!response.data) {
+        throw new Error('No data received from server');
+      }
+      
+      const responseData = response.data;
+      
+      // Check if data is already in the correct format
+      if (responseData.user && responseData.tokens) {
+        return responseData;
+      }
+      
+      // Check if tokens are at root level
+      if (responseData.accessToken && responseData.refreshToken) {
+        return {
+          user: responseData.user,
+          tokens: {
+            accessToken: responseData.accessToken,
+            refreshToken: responseData.refreshToken,
+          },
+        };
+      }
+      
+      throw new Error('Invalid response format from server');
+    } catch (error: any) {
+      console.error('Register error:', error);
+      throw error;
+    }
   },
 
   async logout(): Promise<void> {

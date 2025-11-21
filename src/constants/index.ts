@@ -1,6 +1,6 @@
 // API configuration constants
 export const API_CONFIG = {
-  BASE_URL: 'http://localhost:3000/api', // Update with your backend URL
+  BASE_URL: 'http://192.168.1.3:5001/api', // Update with your backend URL
   TIMEOUT: 30000,
   RETRY_ATTEMPTS: 3,
 };

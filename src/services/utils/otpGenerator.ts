@@ -1,34 +1,136 @@
-import { authenticator, hotp } from 'otplib';
+import 'react-native-get-random-values';
+import CryptoJS from 'crypto-js';
 import { OtpAccount } from '@/types';
 
-class OtpGeneratorService {
-  generateTOTP(account: OtpAccount): string {
-    try {
-      // Configure TOTP
-      authenticator.options = {
-        digits: account.digits,
-        step: account.period,
-      };
+// Base32 alphabet for decoding
+const BASE32_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
 
-      return authenticator.generate(account.secret);
+class OtpGeneratorService {
+  // Decode Base32 string to bytes
+  private base32Decode(base32: string): number[] {
+    const cleanedInput = base32.toUpperCase().replace(/=+$/, '');
+    const bytes: number[] = [];
+    let bits = 0;
+    let value = 0;
+
+    for (let i = 0; i < cleanedInput.length; i++) {
+      const char = cleanedInput[i];
+      const index = BASE32_ALPHABET.indexOf(char);
+      
+      if (index === -1) {
+        throw new Error(`Invalid Base32 character: ${char}`);
+      }
+
+      value = (value << 5) | index;
+      bits += 5;
+
+      if (bits >= 8) {
+        bytes.push((value >>> (bits - 8)) & 0xff);
+        bits -= 8;
+      }
+    }
+
+    return bytes;
+  }
+
+  // Convert number to 8-byte buffer
+  private intToBytes(num: number): number[] {
+    const bytes = new Array(8);
+    for (let i = 7; i >= 0; i--) {
+      bytes[i] = num & 0xff;
+      num = num >>> 8;
+    }
+    return bytes;
+  }
+
+  // Generate HMAC
+  private hmac(algorithm: string, key: number[], message: number[]): CryptoJS.lib.WordArray {
+    const keyWords = CryptoJS.lib.WordArray.create(key);
+    const messageWords = CryptoJS.lib.WordArray.create(message);
+
+    switch (algorithm.toLowerCase()) {
+      case 'sha256':
+        return CryptoJS.HmacSHA256(messageWords, keyWords);
+      case 'sha512':
+        return CryptoJS.HmacSHA512(messageWords, keyWords);
+      default: // sha1
+        return CryptoJS.HmacSHA1(messageWords, keyWords);
+    }
+  }
+
+  // Dynamic truncation as per RFC 4226
+  private dynamicTruncate(hmacResult: CryptoJS.lib.WordArray): number {
+    const bytes = this.wordArrayToBytes(hmacResult);
+    const offset = bytes[bytes.length - 1] & 0x0f;
+    
+    return (
+      ((bytes[offset] & 0x7f) << 24) |
+      ((bytes[offset + 1] & 0xff) << 16) |
+      ((bytes[offset + 2] & 0xff) << 8) |
+      (bytes[offset + 3] & 0xff)
+    );
+  }
+
+  // Convert WordArray to byte array
+  private wordArrayToBytes(wordArray: CryptoJS.lib.WordArray): number[] {
+    const words = wordArray.words;
+    const sigBytes = wordArray.sigBytes;
+    const bytes: number[] = [];
+
+    for (let i = 0; i < sigBytes; i++) {
+      const byte = (words[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xff;
+      bytes.push(byte);
+    }
+
+    return bytes;
+  }
+
+  // Generate OTP code
+  private generateOTP(secret: string, counter: number, digits: number, algorithm: string): string {
+    try {
+      // Decode Base32 secret
+      const keyBytes = this.base32Decode(secret);
+      
+      // Convert counter to 8-byte array
+      const counterBytes = this.intToBytes(counter);
+      
+      // Generate HMAC
+      const hmacResult = this.hmac(algorithm, keyBytes, counterBytes);
+      
+      // Dynamic truncation
+      const truncated = this.dynamicTruncate(hmacResult);
+      
+      // Generate code
+      const code = truncated % Math.pow(10, digits);
+      
+      // Pad with zeros
+      return code.toString().padStart(digits, '0');
     } catch (error) {
-      console.error('TOTP generation error:', error);
+      console.error('OTP generation error:', error);
       throw error;
     }
   }
 
-  generateHOTP(account: OtpAccount): string {
-    try {
-      // Configure HOTP
-      hotp.options = {
-        digits: account.digits,
-      };
+  generateTOTP(account: OtpAccount): string {
+    // Calculate time-based counter
+    const now = Math.floor(Date.now() / 1000);
+    const counter = Math.floor(now / account.period);
+    
+    return this.generateOTP(
+      account.secret,
+      counter,
+      account.digits,
+      account.algorithm
+    );
+  }
 
-      return hotp.generate(account.secret, account.counter);
-    } catch (error) {
-      console.error('HOTP generation error:', error);
-      throw error;
-    }
+  generateHOTP(account: OtpAccount): string {
+    return this.generateOTP(
+      account.secret,
+      account.counter,
+      account.digits,
+      account.algorithm
+    );
   }
 
   getTOTPTimeRemaining(period: number = 30): number {
@@ -36,22 +138,22 @@ class OtpGeneratorService {
     return period - (now % period);
   }
 
-  verifyTOTP(token: string, secret: string): boolean {
+  verifyTOTP(token: string, secret: string, digits: number = 6, period: number = 30, algorithm: string = 'SHA1'): boolean {
     try {
-      return authenticator.verify({ token, secret });
+      const now = Math.floor(Date.now() / 1000);
+      const counter = Math.floor(now / period);
+      const expected = this.generateOTP(secret, counter, digits, algorithm);
+      return token === expected;
     } catch (error) {
       console.error('TOTP verification error:', error);
       return false;
     }
   }
 
-  verifyHOTP(
-    token: string,
-    secret: string,
-    counter: number
-  ): boolean {
+  verifyHOTP(token: string, secret: string, counter: number, digits: number = 6, algorithm: string = 'SHA1'): boolean {
     try {
-      return hotp.verify({ token, secret, counter });
+      const expected = this.generateOTP(secret, counter, digits, algorithm);
+      return token === expected;
     } catch (error) {
       console.error('HOTP verification error:', error);
       return false;

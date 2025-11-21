@@ -32,15 +32,37 @@ class ApiClient {
         if (token && config.headers) {
           config.headers.Authorization = `Bearer ${token}`;
         }
+        console.log('API Request:', {
+          method: config.method?.toUpperCase(),
+          url: config.url,
+          hasToken: !!token,
+        });
         return config;
       },
-      (error) => Promise.reject(error)
+      (error) => {
+        console.error('Request interceptor error:', error);
+        return Promise.reject(error);
+      }
     );
 
     // Response interceptor - handle token refresh
     this.client.interceptors.response.use(
-      (response) => response,
+      (response) => {
+        console.log('API Response:', {
+          url: response.config.url,
+          status: response.status,
+          data: response.data,
+        });
+        return response;
+      },
       async (error: AxiosError) => {
+        console.error('API Error:', {
+          url: error.config?.url,
+          status: error.response?.status,
+          data: error.response?.data,
+          message: error.message,
+        });
+        
         const originalRequest = error.config as InternalAxiosRequestConfig & {
           _retry?: boolean;
         };

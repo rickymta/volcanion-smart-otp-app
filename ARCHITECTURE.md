@@ -1,452 +1,304 @@
-# SmartOTP Mobile App - Architecture Documentation
+# Architecture Documentation
 
 ## Overview
 
-SmartOTP is a production-ready React Native mobile application for managing TOTP/HOTP two-factor authentication codes. Built with Expo, it follows clean architecture principles and implements best practices for security, state management, and offline-first functionality.
+Volcanion Smart OTP App is built using a modern React Native architecture with TypeScript, following best practices for mobile app development, state management, and security.
 
-## Architecture Layers
+## Architecture Patterns
 
-### 1. Presentation Layer (UI)
+### 1. **Feature-Based Architecture**
 
-**Location**: `src/screens/`, `src/components/`, `src/navigation/`
+The application follows a feature-based folder structure, organizing code by feature rather than by file type. This approach improves:
+- Code maintainability
+- Team collaboration
+- Feature isolation
+- Scalability
 
-**Responsibilities**:
-- Render UI components
-- Handle user interactions
-- Navigate between screens
-- Display data from Redux store
+### 2. **Flux Architecture (Redux)**
 
-**Key Components**:
-- **Screens**: Full-page views (Login, Home, Settings, etc.)
-- **Components**: Reusable UI elements (OtpCard, LoadingOverlay)
-- **Navigation**: React Navigation stack and tab navigators
+State management is implemented using Redux Toolkit, following the Flux pattern:
+- **Store**: Single source of truth for application state
+- **Actions**: Payloads of information sent to the store
+- **Reducers**: Pure functions that specify state changes
+- **Selectors**: Functions to derive data from state
 
-**Design Pattern**: Container/Presentational components
+## Core Components
 
-### 2. Business Logic Layer
+### Navigation Layer
 
-**Location**: `src/features/`
+**Structure**: `src/navigation/`
 
-**Responsibilities**:
-- Manage application state with Redux Toolkit
-- Handle async operations (API calls)
-- Implement business rules
-- Coordinate between services and UI
+- **MainNavigator**: Root navigator managing authentication flow
+- **AuthNavigator**: Handles login and registration screens
+- **HomeTabsNavigator**: Bottom tab navigation for main app features
+- **Types**: TypeScript definitions for navigation parameters
 
-**Redux Slices**:
+**Technology**: React Navigation v6 with typed navigation
 
-#### authSlice
-- User authentication state
-- JWT token management
-- Login/logout/register actions
-- Token refresh logic
+### State Management
 
-#### otpSlice
-- OTP accounts management
-- TOTP/HOTP code generation
-- Account CRUD operations
-- Sync status tracking
+**Structure**: `src/features/` and `src/store/`
 
-#### settingsSlice
-- App configuration
-- User preferences
-- Biometric settings
-- Theme and security options
+#### Feature Slices:
 
-**State Management Pattern**: Redux Toolkit with async thunks
+1. **Auth Slice** (`authSlice.ts`)
+   - User authentication state
+   - Login/logout actions
+   - Token management
+   - User profile data
 
-### 3. Service Layer
+2. **OTP Slice** (`otpSlice.ts`)
+   - OTP entries management
+   - TOTP/HOTP generation
+   - OTP CRUD operations
+   - Sync status tracking
 
-**Location**: `src/services/`
+3. **Settings Slice** (`settingsSlice.ts`)
+   - User preferences
+   - App configuration
+   - Theme settings
+   - Security options
 
-**Responsibilities**:
-- External API communication
-- Data encryption/decryption
-- Device capabilities (biometric, secure storage)
-- Business utilities (OTP generation, backup)
+### Service Layer
 
-**API Services** (`src/services/api/`):
+**Structure**: `src/services/`
 
-#### apiClient.ts
-- Axios instance configuration
-- JWT token interceptors
-- Automatic token refresh
-- Request/response handling
+#### API Services (`services/api/`)
 
-#### authService.ts
-- Authentication API calls
-- User registration
-- Password management
+1. **API Client** (`apiClient.ts`)
+   - Axios configuration
+   - Request/response interceptors
+   - Authentication token injection
+   - Error handling
 
-#### otpService.ts
-- OTP account API operations
-- Account sync
-- Import/export functionality
+2. **Auth Service** (`authService.ts`)
+   - User registration
+   - Login/logout
+   - Token refresh
+   - Password management
 
-#### pushOtpService.ts
-- Push OTP request handling
-- Approve/deny operations
+3. **OTP Service** (`otpService.ts`)
+   - OTP CRUD operations
+   - Server synchronization
+   - OTP verification
 
-**Utility Services** (`src/services/utils/`):
+4. **Push OTP Service** (`pushOtpService.ts`)
+   - Push notification handling
+   - Push OTP approval
+   - Real-time OTP delivery
 
-#### encryptionService.ts
-- AES encryption for OTP secrets
-- Key generation and management
-- Data hashing
+#### Utility Services (`services/utils/`)
 
-#### secureStorage.ts
-- Wrapper for expo-secure-store
-- Encrypted key-value storage
-- Token persistence
+1. **Backup Service** (`backupService.ts`)
+   - Cloud backup creation
+   - Backup restoration
+   - Data encryption for backups
 
-#### otpGenerator.ts
-- TOTP code generation
-- HOTP code generation
-- OTP URI parsing
-- Time-based calculations
+2. **Biometric Service** (`biometricService.ts`)
+   - Fingerprint authentication
+   - Face ID/Face recognition
+   - Biometric availability check
 
-#### biometricService.ts
-- Face ID / Touch ID integration
-- Biometric availability check
-- Authentication prompts
+3. **Encryption Service** (`encryptionService.ts`)
+   - Data encryption/decryption
+   - Secure key generation
+   - Cryptographic operations
 
-#### backupService.ts
-- Encrypted backup creation
-- Backup restoration
-- File sharing
+4. **OTP Generator** (`otpGenerator.ts`)
+   - TOTP generation (Time-based)
+   - HOTP generation (Counter-based)
+   - QR code parsing
+   - Secret key validation
 
-### 4. Data Layer
+5. **Secure Storage** (`secureStorage.ts`)
+   - Expo Secure Store wrapper
+   - Encrypted local storage
+   - Token management
 
-**Storage Mechanisms**:
+### Screen Layer
 
-1. **SecureStore** (Encrypted):
-   - JWT tokens
-   - Encryption keys
-   - User credentials
+**Structure**: `src/screens/`
 
-2. **Redux State** (Memory):
-   - Current user session
-   - OTP accounts
-   - App settings
+#### Authentication Screens (`screens/auth/`)
+- **LoginScreen**: User authentication
+- **RegisterScreen**: New user registration
 
-3. **Local Cache**:
-   - Offline OTP accounts
-   - Settings backup
+#### Main Application Screens (`screens/main/`)
+- **HomeScreen**: OTP list and quick actions
+- **AddOtpScreen**: Add new OTP entry
+- **EditOtpScreen**: Modify existing OTP
+- **OtpDetailScreen**: View OTP details and generate codes
+- **PushOtpScreen**: Manage push OTP settings
+- **PushApprovalScreen**: Approve push OTP requests
+- **BackupScreen**: Create and manage backups
+- **RecoveryScreen**: Restore from backup
+- **SettingsScreen**: App settings and preferences
+
+### Component Layer
+
+**Structure**: `src/components/`
+
+Reusable UI components:
+- **LoadingOverlay**: Full-screen loading indicator
+- **OtpCard**: Display OTP entry with generation controls
 
 ## Data Flow
 
 ### Authentication Flow
 
 ```
-User Input (Email/Password)
+User Input → LoginScreen → authService.login()
     ↓
-LoginScreen dispatches login action
+API Request → Backend Authentication
     ↓
-authSlice async thunk
+Token Received → secureStorage.setToken()
     ↓
-authService.login() API call
+authSlice.setUser() → Redux Store Update
     ↓
-apiClient with axios
-    ↓
-Backend API
-    ↓
-Response: { user, tokens }
-    ↓
-secureStorage saves tokens
-    ↓
-Redux state updated
-    ↓
-Navigation to Main stack
+Navigation to HomeScreen
 ```
 
-### OTP Generation Flow (Offline)
+### OTP Generation Flow
 
 ```
-User opens OtpDetailScreen
+User Opens OTP → OtpDetailScreen
     ↓
-Component reads account from Redux
+Get OTP Data → otpSlice.selectOtpById()
     ↓
-otpGenerator.generateTOTP(account)
+Generate Code → otpGenerator.generateTOTP()
     ↓
-Uses otplib with account.secret
+Display Code with Timer → UI Update
     ↓
-Returns 6-digit code
-    ↓
-Display code with timer
-    ↓
-Auto-refresh every period (30s)
+Auto-refresh every 30 seconds
 ```
 
-### OTP Account Addition Flow
+### Data Synchronization Flow
 
 ```
-User scans QR code
+Local Change → otpSlice.addOtp() or updateOtp()
     ↓
-AddOtpScreen receives URI
+Redux Store Update → UI Update (Optimistic)
     ↓
-otpGenerator.parseOtpAuthUri(uri)
+API Call → otpService.createOtp() or updateOtp()
     ↓
-Dispatch addAccount action
+Server Response → Sync confirmation
     ↓
-encryptionService.encrypt(secret)
-    ↓
-otpService.addAccount() API call
-    ↓
-Backend saves encrypted account
-    ↓
-Redux state updated
-    ↓
-Navigate back to Home
+Update local state with server ID
 ```
 
 ## Security Architecture
 
-### 1. Encryption
+### Multi-Layer Security
 
-**OTP Secrets**:
-- Encrypted using expo-crypto AES-256
-- Encryption key stored in SecureStore
-- Never transmitted unencrypted
+1. **Transport Layer**
+   - HTTPS/TLS for all API communications
+   - Certificate pinning (production)
 
-**Implementation**:
-```typescript
-// Generate key
-const key = await Crypto.getRandomBytesAsync(32);
+2. **Storage Layer**
+   - Expo Secure Store for sensitive data
+   - Custom encryption for OTP secrets
+   - No plain-text storage of secrets
 
-// Encrypt
-const encrypted = encryptionService.encrypt(secret);
+3. **Authentication Layer**
+   - JWT token-based authentication
+   - Token refresh mechanism
+   - Biometric authentication for app access
 
-// Decrypt
-const decrypted = encryptionService.decrypt(encrypted);
-```
+4. **Application Layer**
+   - Input validation
+   - XSS prevention
+   - Secure random number generation
 
-### 2. Authentication
+### Encryption Strategy
 
-**JWT Token Management**:
-- Access token: Short-lived (15-60 min)
-- Refresh token: Long-lived (7-30 days)
-- Stored in SecureStore
-- Automatic refresh on 401
+- **Algorithm**: AES-256-GCM
+- **Key Storage**: Expo Secure Store
+- **Data Encrypted**:
+  - OTP secrets
+  - User credentials (temporary)
+  - Backup files
 
-**Biometric Authentication**:
-- Optional layer for viewing OTP codes
-- Face ID / Touch ID / Fingerprint
-- Device-level security
-- Fallback to device passcode
+## API Integration
 
-### 3. Network Security
-
-**API Communication**:
-- HTTPS only
-- JWT bearer tokens
-- Request/response interceptors
-- Automatic retry on failure
-
-## State Management
-
-### Redux Store Structure
-
-```typescript
-{
-  auth: {
-    user: User | null,
-    tokens: AuthTokens | null,
-    isAuthenticated: boolean,
-    isLoading: boolean,
-    error: string | null
-  },
-  otp: {
-    accounts: OtpAccount[],
-    isLoading: boolean,
-    error: string | null,
-    syncStatus: 'idle' | 'syncing' | 'success' | 'error',
-    lastSync: string | null
-  },
-  settings: {
-    biometricEnabled: boolean,
-    backupEnabled: boolean,
-    autoLockEnabled: boolean,
-    autoLockTimeout: number,
-    theme: 'light' | 'dark' | 'auto',
-    notificationsEnabled: boolean,
-    lastBackup: string | null
-  }
-}
-```
-
-### Async Actions Pattern
-
-```typescript
-export const fetchAccounts = createAsyncThunk(
-  'otp/fetchAccounts',
-  async (_, { rejectWithValue }) => {
-    try {
-      const response = await otpService.getAccounts();
-      // Process and return data
-      return response.accounts;
-    } catch (error) {
-      return rejectWithValue(error.message);
-    }
-  }
-);
-```
-
-## Navigation Architecture
-
-### Navigation Structure
+### Request/Response Flow
 
 ```
-RootNavigator
-├── Auth Stack (if not authenticated)
-│   ├── LoginScreen
-│   └── RegisterScreen
-└── Main Stack (if authenticated)
-    ├── HomeTabs
-    │   ├── HomeScreen (OTP list)
-    │   ├── PushOtpScreen
-    │   └── SettingsScreen
-    ├── AddOtpScreen (Modal)
-    ├── OtpDetailScreen
-    ├── EditOtpScreen
-    ├── PushApprovalScreen
-    ├── BackupScreen
-    └── RecoveryScreen
+Screen Component → Service Method
+    ↓
+API Client (with interceptors)
+    ↓
+Add Auth Header → Send Request
+    ↓
+Backend API
+    ↓
+Response Interceptor → Error Handling
+    ↓
+Return Data → Update Redux Store
+    ↓
+UI Update
 ```
 
-### Navigation Guards
+### Error Handling
 
-- Authentication status determines root navigator
-- Biometric lock can prevent access to OTP codes
-- Auto-lock redirects to lock screen
-
-## Offline Functionality
-
-### Offline-First Strategy
-
-1. **OTP Generation**: 
-   - 100% offline using local secrets
-   - No internet required for TOTP/HOTP
-
-2. **Account Management**:
-   - Load from local cache on startup
-   - Sync with server when online
-   - Queue operations when offline
-
-3. **Backup**:
-   - Local encrypted backups
-   - Export/import via file sharing
-
-## Error Handling
-
-### Error Handling Strategy
-
-1. **API Errors**:
-   - Try-catch in async thunks
-   - Display user-friendly messages
-   - Automatic retry for network errors
-
-2. **Validation Errors**:
-   - Client-side validation
-   - Server-side validation feedback
-   - Form field error states
-
-3. **Runtime Errors**:
-   - Error boundaries (future enhancement)
-   - Graceful degradation
-   - User feedback
+1. **Network Errors**: Retry logic with exponential backoff
+2. **Auth Errors**: Auto-logout and redirect to login
+3. **Validation Errors**: Display user-friendly messages
+4. **Server Errors**: Log and show generic error message
 
 ## Performance Optimizations
 
-1. **Lazy Loading**: Screens loaded on demand
-2. **Memoization**: React.memo for heavy components
-3. **Virtualization**: FlatList for large account lists
-4. **Debouncing**: Search and filter operations
-5. **Image Optimization**: Asset preloading
+1. **Code Splitting**: Feature-based lazy loading
+2. **Memoization**: React.memo for expensive components
+3. **Redux Selectors**: Reselect for computed state
+4. **Image Optimization**: Cached and optimized assets
+5. **List Virtualization**: FlatList for large OTP lists
 
 ## Testing Strategy
 
-### Unit Tests
-- Redux reducers and actions
-- Service layer functions
-- Utility functions
+- **Unit Tests**: Services and utilities
+- **Integration Tests**: Redux slices and API integration
+- **E2E Tests**: Critical user flows
+- **Security Tests**: Penetration testing and code analysis
 
-### Integration Tests
-- API service integration
-- Redux thunk flows
-- Navigation flows
-
-### E2E Tests
-- User authentication flows
-- OTP account management
-- Biometric authentication
-
-## Future Enhancements
-
-1. **Cloud Sync**: Real-time multi-device sync
-2. **Push Notifications**: Real-time push OTP requests
-3. **Dark Mode**: Full theme support
-4. **Widgets**: iOS/Android home screen widgets
-5. **Watch App**: Apple Watch / Wear OS companion
-6. **Browser Extension**: Desktop integration
-
-## Dependencies
-
-### Core
-- react-native: UI framework
-- expo: Development platform
-- react-navigation: Navigation
-- @reduxjs/toolkit: State management
-
-### Security
-- expo-secure-store: Encrypted storage
-- expo-local-authentication: Biometric auth
-- expo-crypto: Cryptography
-
-### Features
-- otplib: OTP generation
-- axios: HTTP client
-- expo-barcode-scanner: QR scanning
-
-## Build & Deployment
+## Build and Deployment
 
 ### Development Build
 ```bash
-expo start
+npx expo start
 ```
 
 ### Production Build
 ```bash
 # iOS
-expo build:ios -t archive
+eas build --platform ios --profile production
 
 # Android
-expo build:android -t app-bundle
+eas build --platform android --profile production
 ```
 
-### App Store Submission
-1. Configure app.json metadata
-2. Generate app icons and splash screens
-3. Build production binaries
-4. Submit to App Store / Play Store
+## Future Enhancements
 
-## Maintenance
+- [ ] Wear OS / watchOS support
+- [ ] Browser extension companion
+- [ ] Multi-device synchronization
+- [ ] Offline mode improvements
+- [ ] Advanced analytics
+- [ ] Custom OTP periods and digits
 
-### Code Quality
-- TypeScript for type safety
-- ESLint for code style
-- Prettier for formatting
+## Dependencies Management
 
-### Version Control
-- Semantic versioning
-- Changelog maintenance
-- Git flow branching
+Key dependencies are managed through:
+- **package.json**: NPM package versions
+- **expo**: Expo SDK version lock
+- Regular security audits via `npm audit`
 
-### Monitoring
-- Error tracking (Sentry integration recommended)
-- Analytics (Firebase/Amplitude)
+## Monitoring and Logging
+
+- Error tracking (production)
 - Performance monitoring
+- User analytics
+- Crash reporting
 
 ---
 
-**Version**: 1.0.0  
-**Last Updated**: 2025-11-21
+For detailed setup instructions, see [README.md](./README.md)
